@@ -1,0 +1,92 @@
+---
+import { AlertTriangle, Building2, MapPin } from 'lucide-astro'
+import { FLAG_META, type RedFlagItem } from '../data/redflags'
+
+interface Props {
+  item: RedFlagItem
+  index: number
+}
+
+const { item, index } = Astro.props
+
+const codes = item.flags.map((flag) => flag.code)
+const isHigh = item.flags.some((flag) => FLAG_META[flag.code].severity === 'high')
+
+const dateLabel = item.publishedAt ?? 'Sin fecha'
+---
+
+<article
+  data-flag-card
+  data-flag-severity={isHigh ? 'high' : 'medium'}
+  data-flag-codes={codes.join(' ')}
+  data-order={String(index)}
+  class="group flex h-full flex-col rounded-4xl border border-line bg-surface p-6 backdrop-blur-sm transition duration-500 hover:-translate-y-2 hover:border-primary/40 md:p-8"
+  hidden={false}
+>
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <span class="font-mono text-[10px] tracking-widest text-ink-muted uppercase">{item.source}</span>
+    {
+      isHigh ? (
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-red-500/40 bg-red-500/10 px-3 py-1 font-display text-[10px] tracking-widest text-red-500 uppercase dark:text-red-400">
+          <AlertTriangle class="h-3 w-3" aria-hidden="true" />
+          Grave
+        </span>
+      ) : (
+        <span class="rounded-full border border-line bg-surface px-3 py-1 font-display text-[10px] tracking-widest text-ink-muted uppercase">
+          Atención
+        </span>
+      )
+    }
+  </div>
+
+  <h3 class="mb-3 text-lg leading-snug font-bold">
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="focus-ring rounded-md transition-colors duration-300 hover:text-accent"
+    >
+      {item.title}
+    </a>
+  </h3>
+
+  <div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-light text-ink-muted">
+    <span class="inline-flex items-center gap-1.5">
+      <Building2 class="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+      {item.company}
+    </span>
+    <span class="inline-flex items-center gap-1.5">
+      <MapPin class="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+      {item.city}
+    </span>
+    <span class="font-mono text-xs">{item.salaryText}</span>
+  </div>
+
+  <ul class="mb-6 flex flex-col gap-4">
+    {
+      item.flags.map((flag) => (
+        <li>
+          <p class="mb-1.5 font-display text-[10px] tracking-widest text-accent uppercase">
+            {FLAG_META[flag.code].label}
+          </p>
+          <blockquote class="border-l border-line pl-4 text-sm font-light leading-relaxed text-ink-muted">
+            «{flag.evidence}»
+          </blockquote>
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="mt-auto flex items-center justify-between gap-4 border-t border-line pt-4">
+    <p class="font-mono text-[11px] text-ink-muted">{dateLabel}</p>
+    <a
+      href={item.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="focus-ring shrink-0 rounded-lg text-sm font-bold text-accent transition-transform duration-500 group-hover:translate-x-2"
+      aria-label={`Abrir la oferta «${item.title}» en ${item.source}`}
+    >
+      Ver &rarr;
+    </a>
+  </div>
+</article>

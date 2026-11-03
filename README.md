@@ -44,6 +44,29 @@ src/
 └─ pages/index.astro
 ```
 
+## Red flags
+
+Sección propia con **15 ofertas marcadas** y **34 señales**, cada una con una **cita verbatim** de la oferta. Una red flag sin texto que la respalde es una opinión, así que el campo `evidence` es obligatorio en `src/data/redflags.ts`.
+
+| Señal | Qué detecta |
+|---|---|
+| Venta disfrazada de desarrollo | El título dice «desarrollador» y el texto describe ruta comercial con GPS |
+| Discriminación por edad | La oferta fija un rango de edad como requisito |
+| El sueldo del texto no es el del portal | La descripción dice una cifra y el campo del portal dice otra |
+| Sueldo ilegible | Cifra mal escrita, sin separador o sin dígitos |
+| Seniority alto, sueldo oculto | Años de experiencia y stack amplio, monto vacío |
+| Experiencia desproporcionada al sueldo | Título profesional y 3 años por un salario cercano al mínimo |
+| Varios cargos en un título | Dos o más cargos separados por «/» |
+| Responsabilidades y requisitos inflados | Listas que describen un equipo, no una vacante |
+| El rodamiento cuenta como salario | Reembolso de transporte sumado al «potencial mensual» |
+| Exige vehículo propio | Moto propia como requisito indispensable |
+| Sábados laborables | Jornada con sábados sin compensación en el sueldo |
+| Vacante vieja todavía abierta | Más de un mes publicada y sigue listada |
+| Requisito publicado vacío | «años de experiencia» sin el número |
+| Puesto mal etiquetado | Bajo «desarrollador», pero es administración, logística o ventas |
+
+Las descripciones de Computrabajo ya estaban en el dataset pagado, así que la sección **no costó ninguna corrida extra**.
+
 ## Filtros
 
 Client-side puro, sin islas de framework. El estado vive en la URL:

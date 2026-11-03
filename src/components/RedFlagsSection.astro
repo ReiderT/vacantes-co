@@ -1,0 +1,162 @@
+---
+import { TriangleAlert } from 'lucide-astro'
+import SectionHeader from './SectionHeader.astro'
+import RedFlagCard from './RedFlagCard.astro'
+import { flagSummary, redFlags } from '../data/redflags'
+
+const { ordered, offers, high, total } = flagSummary
+
+const chipClass =
+  'focus-ring cursor-pointer rounded-full border border-line bg-surface px-4 py-1.5 text-xs font-medium text-ink-muted transition duration-300 hover:border-line-hover hover:text-accent active:scale-95 aria-pressed:border-primary/30 aria-pressed:bg-primary/10 aria-pressed:text-accent'
+
+const metrics = [
+  { label: 'Ofertas marcadas', value: offers, hint: 'de las 56 vacantes técnicas' },
+  { label: 'Flags graves', value: high, hint: 'con al menos una señal roja' },
+  { label: 'Señales totales', value: total, hint: 'cada una con cita textual' },
+]
+---
+
+<section class="mt-24 border-t border-line pt-16 md:mt-32">
+  <SectionHeader
+    eyebrow="Alertas"
+    title="Ofertas con "
+    highlight="red flags"
+    description="Señales detectadas leyendo el texto publicado de cada aviso, no adivinando por el título. Cada una cita la oferta palabra por palabra: si no está en el aviso, no está acá."
+  />
+
+  <div class="mb-12 grid gap-4 sm:grid-cols-3" data-reveal>
+    {
+      metrics.map((metric) => (
+        <div class="rounded-3xl border border-line bg-surface/60 p-6 backdrop-blur-sm">
+          <p class="mb-2 font-display text-[10px] tracking-widest text-ink-muted uppercase">{metric.label}</p>
+          <p class="font-display text-3xl text-gradient md:text-4xl">{metric.value}</p>
+          <p class="mt-2 text-xs font-light text-ink-muted">{metric.hint}</p>
+        </div>
+      ))
+    }
+  </div>
+
+  <div data-flag-root class="mb-10 rounded-[40px] border border-line glassmorphism p-6 md:p-8">
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <fieldset class="min-w-0 border-0 p-0">
+        <legend class="mb-3 ml-1 block font-display text-[10px] tracking-widest text-ink-muted uppercase">
+          Severidad
+        </legend>
+        <div class="flex flex-wrap gap-2">
+          <button type="button" data-flag-severity-filter data-value="all" aria-pressed="true" class={chipClass}>
+            Todas
+          </button>
+          <button type="button" data-flag-severity-filter data-value="high" aria-pressed="false" class={chipClass}>
+            Sólo graves
+          </button>
+        </div>
+      </fieldset>
+
+      <div>
+        <label for="flag-code" class="mb-2 ml-1 block font-display text-[10px] tracking-widest text-ink-muted uppercase">
+          Tipo de señal
+        </label>
+        <select
+          id="flag-code"
+          data-flag-code
+          class="focus-ring w-full cursor-pointer rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink transition-colors duration-300 hover:border-line-hover focus:border-primary lg:w-80"
+        >
+          <option value="all">Todas las señales</option>
+          {
+            ordered.map((flag) => (
+              <option value={flag.code}>
+                {flag.label} ({flag.count})
+              </option>
+            ))
+          }
+        </select>
+      </div>
+    </div>
+
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
+      <p class="text-sm font-light text-ink-muted">
+        <span data-flag-count class="font-mono text-base text-ink">0</span>
+        de <span class="font-mono">{offers}</span> ofertas marcadas
+      </p>
+      <p class="inline-flex items-center gap-2 font-mono text-[11px] text-ink-muted">
+        <TriangleAlert class="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+        evidencia verbatim
+      </p>
+    </div>
+  </div>
+
+  <div class="grid gap-6 lg:grid-cols-2" data-flag-grid>
+    {redFlags.map((item, index) => <RedFlagCard item={item} index={index} />)}
+  </div>
+
+  <div
+    data-flag-empty
+    hidden
+    class="rounded-[40px] border border-line bg-surface/60 px-8 py-16 text-center backdrop-blur-sm"
+  >
+    <p class="font-display mb-3 text-xl text-ink">Ninguna oferta coincide</p>
+    <p class="mx-auto max-w-md text-sm font-light text-ink-muted">
+      Probá con «Todas» en severidad o «Todas las señales» en el tipo.
+    </p>
+  </div>
+</section>
+
+<script>
+  type FlagState = {
+    severity: string
+    code: string
+  }
+
+  const initRedFlags = () => {
+    const root = document.querySelector<HTMLElement>('[data-flag-root]')
+    const grid = document.querySelector<HTMLElement>('[data-flag-grid]')
+    const count = document.querySelector<HTMLElement>('[data-flag-count]')
+    const empty = document.querySelector<HTMLElement>('[data-flag-empty]')
+    if (!root || !grid || !count) return
+
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-flag-card]'))
+    if (cards.length === 0) return
+
+    const chips = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-flag-severity-filter]'))
+    const select = root.querySelector<HTMLSelectElement>('[data-flag-code]')
+
+    let state: FlagState = { severity: 'all', code: 'all' }
+
+    const apply = () => {
+      let visible = 0
+
+      cards.forEach((card) => {
+        const okSeverity = state.severity === 'all' || card.dataset.flagSeverity === state.severity
+        const codes = (card.dataset.flagCodes ?? '').split(' ')
+        const okCode = state.code === 'all' || codes.includes(state.code)
+        const show = okSeverity && okCode
+        card.hidden = !show
+        if (show) visible += 1
+      })
+
+      count.textContent = String(visible)
+      if (empty) empty.hidden = visible !== 0
+
+      chips.forEach((chip) => {
+        chip.setAttribute('aria-pressed', String(state.severity === chip.dataset.value))
+      })
+    }
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        state = { ...state, severity: chip.dataset.value ?? 'all' }
+        apply()
+      })
+    })
+
+    select?.addEventListener('change', () => {
+      state = { ...state, code: select.value }
+      apply()
+    })
+
+    apply()
+  }
+
+  document.addEventListener('astro:page-load', initRedFlags)
+  initRedFlags()
+</script>
