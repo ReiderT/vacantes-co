@@ -1,0 +1,103 @@
+---
+import { Building2, MapPin } from 'lucide-astro'
+import { daysAgo, isFirmware, type Job } from '../data/jobs'
+
+interface Props {
+  job: Job
+  index: number
+}
+
+const { job, index } = Astro.props
+
+const days = daysAgo(job.publishedAt)
+const hasSalary = job.salaryMax !== null
+const firmware = isFirmware(job)
+
+const haystack = [job.title, job.company, job.city, job.stack.join(' '), job.contract]
+  .join(' ')
+  .toLowerCase()
+
+const dateLabel =
+  days === null ? 'Sin fecha' : days === 0 ? 'Hoy' : days === 1 ? 'Ayer' : `Hace ${days} días`
+---
+
+<article
+  data-job-card
+  data-track={job.track}
+  data-mode={job.mode}
+  data-source={job.source}
+  data-days={days === null ? '' : String(days)}
+  data-has-salary={hasSalary ? '1' : '0'}
+  data-salary={String(job.salaryMax ?? job.salaryMin ?? 0)}
+  data-date={job.publishedAt ?? ''}
+  data-search={haystack}
+  data-firmware={firmware ? '1' : '0'}
+  data-order={String(index)}
+  class="group relative flex h-full flex-col rounded-4xl border border-line bg-surface p-6 backdrop-blur-sm transition duration-500 hover:-translate-y-2 hover:border-primary/40 md:p-8"
+>
+  <div class="mb-4 flex items-center justify-between gap-3">
+    <span class="font-mono text-[10px] tracking-widest text-ink-muted uppercase">{job.source}</span>
+    {
+      firmware && (
+        <span class="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 font-display text-[10px] tracking-widest text-accent uppercase">
+          Firmware
+        </span>
+      )
+    }
+  </div>
+
+  <h3 class="mb-3 text-lg leading-snug font-bold">
+    <a
+      href={job.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="focus-ring rounded-md transition-colors duration-300 hover:text-accent"
+    >
+      {job.title}
+    </a>
+  </h3>
+
+  <div class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm font-light text-ink-muted">
+    <span class="inline-flex items-center gap-1.5">
+      <Building2 class="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+      {job.company}
+    </span>
+    <span class="inline-flex items-center gap-1.5">
+      <MapPin class="h-3.5 w-3.5 shrink-0 text-primary" aria-hidden="true" />
+      {job.city}
+    </span>
+  </div>
+
+  <p class:list={['mb-4 font-mono text-base', hasSalary ? 'text-ink' : 'text-ink-muted']}>
+    {job.salaryText}
+  </p>
+
+  {
+    job.stack.length > 0 && (
+      <ul class="mb-5 flex flex-wrap gap-2">
+        {job.stack.map((tech) => (
+          <li class="rounded-full border border-line px-3 py-1 text-[11px] font-medium text-ink-muted">
+            {tech}
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <div class="mt-auto flex items-end justify-between gap-4 border-t border-line pt-4">
+    <div class="text-xs font-light text-ink-muted">
+      <p class="font-medium text-ink">{job.mode}</p>
+      <p>{job.contract}</p>
+      <p class="mt-1 font-mono text-[11px]">{dateLabel}</p>
+    </div>
+    <a
+      href={job.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="focus-ring shrink-0 rounded-lg text-sm font-bold text-accent transition-transform duration-500 group-hover:translate-x-2"
+      aria-label={`Abrir la oferta «${job.title}» en ${job.source}`}
+    >
+      Ver &rarr;
+    </a>
+  </div>
+</article>

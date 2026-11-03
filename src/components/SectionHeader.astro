@@ -1,0 +1,34 @@
+---
+interface Props {
+  eyebrow?: string
+  title: string
+  highlight?: string
+  description?: string
+  align?: 'center' | 'left'
+  class?: string
+}
+
+const { eyebrow, title, highlight, description, align = 'center', class: className } = Astro.props
+const centered = align === 'center'
+---
+
+<div class:list={['mb-16 md:mb-20', centered && 'text-center', className]} data-reveal>
+  {
+    eyebrow && (
+      <span class="mb-6 inline-block rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 font-display text-[10px] tracking-widest text-accent uppercase">
+        {eyebrow}
+      </span>
+    )
+  }
+  <h2 class="font-display mb-4 text-3xl leading-[1.15] text-ink md:text-4xl">
+    {title}
+    {highlight && <span class="text-gradient">{highlight}</span>}
+  </h2>
+  {
+    description && (
+      <p class:list={['text-lg font-light leading-relaxed text-ink-muted', centered && 'mx-auto max-w-2xl']}>
+        {description}
+      </p>
+    )
+  }
+</div>

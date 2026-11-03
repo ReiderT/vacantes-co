@@ -1,0 +1,352 @@
+---
+import { RotateCcw, Search } from 'lucide-astro'
+
+interface Props {
+  total: number
+}
+
+interface ChipOption {
+  value: string
+  label: string
+}
+
+interface ChipGroup {
+  key: string
+  legend: string
+  options: ChipOption[]
+}
+
+const groups: ChipGroup[] = [
+  {
+    key: 'track',
+    legend: 'Rol',
+    options: [
+      { value: 'all', label: 'Todos' },
+      { value: 'dev', label: 'Desarrollo' },
+      { value: 'electronics', label: 'Electrónica' },
+    ],
+  },
+  {
+    key: 'mode',
+    legend: 'Modalidad',
+    options: [
+      { value: 'all', label: 'Todas' },
+      { value: 'Remoto', label: 'Remoto' },
+      { value: 'Híbrido', label: 'Híbrido' },
+      { value: 'Presencial', label: 'Presencial' },
+    ],
+  },
+  {
+    key: 'source',
+    legend: 'Portal',
+    options: [
+      { value: 'all', label: 'Todos' },
+      { value: 'Computrabajo', label: 'Computrabajo' },
+      { value: 'elempleo', label: 'elempleo' },
+    ],
+  },
+  {
+    key: 'window',
+    legend: 'Publicación',
+    options: [
+      { value: 'all', label: 'Todo' },
+      { value: 'week', label: 'Esta semana' },
+      { value: 'month', label: '30 días' },
+      { value: 'stale', label: 'Más de 30 días' },
+    ],
+  },
+  {
+    key: 'salary',
+    legend: 'Sueldo',
+    options: [
+      { value: 'all', label: 'Cualquiera' },
+      { value: 'only', label: 'Solo con monto' },
+    ],
+  },
+]
+
+const { total } = Astro.props
+
+const sorts: ChipOption[] = [
+  { value: 'recent', label: 'Más recientes' },
+  { value: 'salary-desc', label: 'Mayor sueldo' },
+  { value: 'salary-asc', label: 'Menor sueldo' },
+]
+
+const chipClass =
+  'focus-ring cursor-pointer rounded-full border border-line bg-surface px-4 py-1.5 text-xs font-medium text-ink-muted transition duration-300 hover:border-line-hover hover:text-accent active:scale-95 aria-pressed:border-primary/30 aria-pressed:bg-primary/10 aria-pressed:text-accent'
+---
+
+<div data-filter-root class="mb-12 rounded-[40px] border border-line glassmorphism p-6 md:p-8">
+  <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+    <div class="w-full max-w-md">
+      <label for="job-search" class="mb-2 ml-1 block font-display text-[10px] tracking-widest text-ink-muted uppercase">
+        Buscar
+      </label>
+      <div class="relative">
+        <Search
+          class="pointer-events-none absolute top-1/2 left-4 h-4 w-4 -translate-y-1/2 text-ink-muted"
+          aria-hidden="true"
+        />
+        <input
+          type="search"
+          id="job-search"
+          data-filter-search
+          placeholder="Puesto, empresa, stack o ciudad…"
+          autocomplete="off"
+          class="focus-ring w-full rounded-2xl border border-line bg-surface py-3 pr-4 pl-11 text-sm text-ink transition-colors duration-300 placeholder:text-ink-muted/60 hover:border-line-hover focus:border-primary"
+        />
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-end gap-3">
+      <div>
+        <label for="job-sort" class="mb-2 ml-1 block font-display text-[10px] tracking-widest text-ink-muted uppercase">
+          Orden
+        </label>
+        <select
+          id="job-sort"
+          data-filter-sort
+          class="focus-ring cursor-pointer rounded-2xl border border-line bg-surface px-4 py-3 text-sm text-ink transition-colors duration-300 hover:border-line-hover focus:border-primary"
+        >
+          {sorts.map((option) => <option value={option.value}>{option.label}</option>)}
+        </select>
+      </div>
+      <button
+        type="button"
+        data-filter-reset
+        class="focus-ring inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-line bg-surface px-4 py-3 text-sm font-bold text-ink-muted transition duration-300 hover:border-line-hover hover:text-accent active:scale-95 disabled:pointer-events-none disabled:opacity-40"
+      >
+        <RotateCcw class="h-4 w-4" aria-hidden="true" />
+        Limpiar
+      </button>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-6">
+    {
+      groups.map((group) => (
+        <fieldset class="min-w-0 border-0 p-0">
+          <legend class="mb-3 ml-1 block font-display text-[10px] tracking-widest text-ink-muted uppercase">
+            {group.legend}
+          </legend>
+          <div class="flex flex-wrap gap-2">
+            {group.options.map((option) => (
+              <button
+                type="button"
+                data-filter={group.key}
+                data-value={option.value}
+                aria-pressed={option.value === 'all' ? 'true' : 'false'}
+                class={chipClass}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </fieldset>
+      ))
+    }
+  </div>
+
+  <div class="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-line pt-6">
+    <p class="text-sm font-light text-ink-muted">
+      <span data-filter-count class="font-mono text-base text-ink">0</span>
+      de <span class="font-mono">{total}</span> vacantes
+    </p>
+    <p data-filter-note class="font-mono text-[11px] text-ink-muted"></p>
+  </div>
+</div>
+
+<script>
+  type State = {
+    q: string
+    track: string
+    mode: string
+    source: string
+    window: string
+    salary: string
+    sort: string
+  }
+
+  const DEFAULTS: State = {
+    q: '',
+    track: 'all',
+    mode: 'all',
+    source: 'all',
+    window: 'all',
+    salary: 'all',
+    sort: 'recent',
+  }
+
+  const WEEK_DAYS = 7
+  const MONTH_DAYS = 30
+
+  const readUrl = (): State => {
+    const params = new URLSearchParams(window.location.search)
+    return {
+      q: params.get('q') ?? DEFAULTS.q,
+      track: params.get('track') ?? DEFAULTS.track,
+      mode: params.get('mode') ?? DEFAULTS.mode,
+      source: params.get('source') ?? DEFAULTS.source,
+      window: params.get('window') ?? DEFAULTS.window,
+      salary: params.get('salary') ?? DEFAULTS.salary,
+      sort: params.get('sort') ?? DEFAULTS.sort,
+    }
+  }
+
+  const writeUrl = (state: State) => {
+    const params = new URLSearchParams()
+    ;(Object.keys(DEFAULTS) as Array<keyof State>).forEach((key) => {
+      if (state[key] !== DEFAULTS[key]) params.set(key, state[key])
+    })
+    const query = params.toString()
+    const url = query ? `${window.location.pathname}?${query}` : window.location.pathname
+    window.history.replaceState(null, '', url)
+  }
+
+  const matchesWindow = (days: string, window: string): boolean => {
+    if (window === 'all') return true
+    if (days === '') return false
+    const value = Number(days)
+    if (Number.isNaN(value)) return false
+    if (window === 'week') return value <= WEEK_DAYS
+    if (window === 'month') return value <= MONTH_DAYS
+    if (window === 'stale') return value > MONTH_DAYS
+    return true
+  }
+
+  const initFilters = () => {
+    const root = document.querySelector<HTMLElement>('[data-filter-root]')
+    if (!root) return
+
+    const grid = document.querySelector<HTMLElement>('[data-job-grid]')
+    const search = root.querySelector<HTMLInputElement>('[data-filter-search]')
+    const sort = root.querySelector<HTMLSelectElement>('[data-filter-sort]')
+    const count = document.querySelector<HTMLElement>('[data-filter-count]')
+    const note = document.querySelector<HTMLElement>('[data-filter-note]')
+    const reset = root.querySelector<HTMLButtonElement>('[data-filter-reset]')
+    const empty = document.querySelector<HTMLElement>('[data-job-empty]')
+
+    if (!grid || !search || !sort || !count || !reset) return
+
+    const cards = Array.from(grid.querySelectorAll<HTMLElement>('[data-job-card]'))
+    if (cards.length === 0) return
+
+    const chips = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-filter]'))
+    let state: State = readUrl()
+
+    const num = (card: HTMLElement, key: string): number => {
+      const raw = card.dataset[key] ?? ''
+      const value = Number(raw)
+      return raw === '' || Number.isNaN(value) ? 0 : value
+    }
+
+    const applySort = () => {
+      const sorted = [...cards].sort((a, b) => {
+        if (state.sort === 'salary-desc') {
+          const diff = num(b, 'salary') - num(a, 'salary')
+          return diff !== 0 ? diff : num(a, 'order') - num(b, 'order')
+        }
+        if (state.sort === 'salary-asc') {
+          const left = num(a, 'salary')
+          const right = num(b, 'salary')
+          if (left === 0 && right === 0) return num(a, 'order') - num(b, 'order')
+          if (left === 0) return 1
+          if (right === 0) return -1
+          return left - right
+        }
+        const left = a.dataset.date ?? ''
+        const right = b.dataset.date ?? ''
+        if (left === right) return num(a, 'order') - num(b, 'order')
+        if (left === '') return 1
+        if (right === '') return -1
+        return right.localeCompare(left)
+      })
+
+      sorted.forEach((card) => grid.appendChild(card))
+    }
+
+    const apply = () => {
+      let visible = 0
+
+      cards.forEach((card) => {
+        const haystack = card.dataset.search ?? ''
+        const okSearch = state.q === '' || haystack.includes(state.q)
+        const okTrack = state.track === 'all' || card.dataset.track === state.track
+        const okMode = state.mode === 'all' || card.dataset.mode === state.mode
+        const okSource = state.source === 'all' || card.dataset.source === state.source
+        const okWindow = matchesWindow(card.dataset.days ?? '', state.window)
+        const okSalary = state.salary === 'all' || card.dataset.hasSalary === '1'
+
+        const show = okSearch && okTrack && okMode && okSource && okWindow && okSalary
+        card.hidden = !show
+        if (show) visible += 1
+      })
+
+      count.textContent = String(visible)
+      if (empty) empty.hidden = visible !== 0
+      reset.disabled =
+        state.q === DEFAULTS.q &&
+        state.track === DEFAULTS.track &&
+        state.mode === DEFAULTS.mode &&
+        state.source === DEFAULTS.source &&
+        state.window === DEFAULTS.window &&
+        state.salary === DEFAULTS.salary &&
+        state.sort === DEFAULTS.sort
+
+      if (note) {
+        const parts: string[] = []
+        if (state.window === 'week') parts.push('7 días o menos')
+        if (state.window === 'month') parts.push('30 días o menos')
+        if (state.window === 'stale') parts.push('más de 30 días')
+        if (state.salary === 'only') parts.push('con monto publicado')
+        note.textContent = parts.join(' · ')
+      }
+
+      chips.forEach((chip) => {
+        const key = chip.dataset.filter as keyof State | undefined
+        if (!key) return
+        chip.setAttribute('aria-pressed', String(state[key] === chip.dataset.value))
+      })
+
+      search.value = state.q
+      sort.value = state.sort
+
+      applySort()
+    }
+
+    const commit = () => {
+      writeUrl(state)
+      apply()
+    }
+
+    chips.forEach((chip) => {
+      chip.addEventListener('click', () => {
+        const key = chip.dataset.filter as keyof State | undefined
+        if (!key) return
+        state = { ...state, [key]: chip.dataset.value ?? 'all' }
+        commit()
+      })
+    })
+
+    search.addEventListener('input', () => {
+      state = { ...state, q: search.value.trim().toLowerCase() }
+      commit()
+    })
+
+    sort.addEventListener('change', () => {
+      state = { ...state, sort: sort.value }
+      commit()
+    })
+
+    reset.addEventListener('click', () => {
+      state = { ...DEFAULTS }
+      commit()
+    })
+
+    apply()
+  }
+
+  document.addEventListener('astro:page-load', initFilters)
+  initFilters()
+</script>

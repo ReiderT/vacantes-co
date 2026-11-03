@@ -1,0 +1,118 @@
+---
+import Base from '../layouts/Base.astro'
+import SectionHeader from '../components/SectionHeader.astro'
+import StatsBar from '../components/StatsBar.astro'
+import FilterPanel from '../components/FilterPanel.astro'
+import JobCard from '../components/JobCard.astro'
+import { jobs, stats } from '../data/jobs'
+
+const ordered = [...jobs].sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? ''))
+
+const findings = [
+  {
+    title: 'La semana no rinde',
+    body: `Sólo ${stats.thisWeek} de ${stats.total} vacantes técnicas se publicaron en los últimos 7 días, y ninguna de firmware o electrónica. El contenido real vive entre 15 y 30 días atrás.`,
+  },
+  {
+    title: 'Los filtros de fecha de los Actors fallan',
+    body: 'elempleo reportó «Posted within: Last 7 days» y devolvió una oferta del 9 de septiembre de 2025. Computrabajo ordena por novedad pero no filtra. El recorte por fecha se hace del lado del cliente.',
+  },
+  {
+    title: 'El stack se infiere',
+    body: 'Ningún portal expone habilidades como campo: Computrabajo da tags ruidosos y elempleo lo esconde en la descripción. Donde dice «(título)» el stack salió del nombre del cargo.',
+  },
+]
+---
+
+<Base
+  title="Vacantes CO · Desarrollo y electrónica — RTElectronics"
+  description="Radar de vacantes de desarrollo, firmware e ingeniería electrónica en Colombia, extraído con Apify de Computrabajo y elempleo."
+>
+  <section class="pt-8 pb-16 md:pt-14 md:pb-20" data-reveal>
+    <span
+      class="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-4 py-1.5 font-display text-[10px] tracking-widest text-accent uppercase"
+    >
+      <span class="h-1.5 w-1.5 rounded-full bg-primary"></span>
+      Snapshot 2026-11-03 · Colombia
+    </span>
+
+    <h1 class="font-display mb-8 max-w-4xl text-4xl leading-[1.08] text-ink md:text-6xl">
+      Radar de <span class="text-gradient">vacantes</span> técnicas
+    </h1>
+
+    <p class="max-w-2xl text-lg font-light leading-relaxed text-ink-muted md:text-xl">
+      Desarrollo de software, firmware e ingeniería electrónica publicados en
+      <span class="text-ink">Computrabajo Colombia</span> y <span class="text-ink">elempleo.com</span>.
+      Puesto, sueldo, stack y enlace directo — con filtros que sí funcionan.
+    </p>
+  </section>
+
+  <StatsBar />
+
+  <section class="mt-16 md:mt-20">
+    <div class="mb-8 flex flex-wrap items-baseline justify-between gap-4" data-reveal>
+      <h2 class="font-display text-2xl text-ink md:text-3xl">Explorar</h2>
+      <p class="font-mono text-[11px] text-ink-muted">InfoJobs y Bumeran no operan en Colombia</p>
+    </div>
+
+    <FilterPanel total={jobs.length} />
+
+    <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3" data-job-grid>
+      {ordered.map((job, index) => <JobCard job={job} index={index} />)}
+    </div>
+
+    <div
+      data-job-empty
+      hidden
+      class="rounded-[40px] border border-line bg-surface/60 px-8 py-16 text-center backdrop-blur-sm"
+    >
+      <p class="font-display mb-3 text-xl text-ink">Ninguna vacante coincide</p>
+      <p class="mx-auto max-w-md text-sm font-light text-ink-muted">
+        Probá aflojar la ventana de publicación o quitar el filtro de sueldo: sólo
+        <span class="font-mono"> {stats.withSalary} </span>
+        de <span class="font-mono">{stats.total}</span> ofertas publican el monto.
+      </p>
+    </div>
+  </section>
+
+  <section class="mt-24 border-t border-line pt-16 md:mt-32">
+    <SectionHeader
+      eyebrow="Método"
+      title="Lo que hay que saber de "
+      highlight="estos datos"
+      align="left"
+      description="Tres límites que descubrimos ejecutando los Actors, no leyendo su documentación."
+    />
+
+    <div class="grid gap-6 md:grid-cols-3">
+      {
+        findings.map((finding) => (
+          <div class="rounded-3xl border border-line bg-surface/60 p-6 backdrop-blur-sm md:p-8" data-reveal>
+            <h3 class="mb-3 text-lg font-bold text-ink">{finding.title}</h3>
+            <p class="text-sm font-light leading-relaxed text-ink-muted">{finding.body}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="mt-8 rounded-[40px] border border-line glassmorphism p-6 md:p-10" data-reveal>
+      <h3 class="font-display mb-4 text-xl text-ink">Rango salarial observado</h3>
+      <div class="grid gap-6 sm:grid-cols-2">
+        <div>
+          <p class="font-display mb-1 text-[10px] tracking-widest text-ink-muted uppercase">Remoto · desarrollo</p>
+          <p class="font-mono text-2xl text-gradient md:text-3xl">$6 – 8M COP</p>
+          <p class="mt-2 text-xs font-light text-ink-muted">por mes, roles semi senior y senior</p>
+        </div>
+        <div>
+          <p class="font-display mb-1 text-[10px] tracking-widest text-ink-muted uppercase">Presencial · desarrollo</p>
+          <p class="font-mono text-2xl text-gradient md:text-3xl">$3,5 – 4,5M COP</p>
+          <p class="mt-2 text-xs font-light text-ink-muted">mismos títulos, distinta modalidad</p>
+        </div>
+      </div>
+      <p class="mt-6 border-t border-line pt-4 text-xs font-light text-ink-muted">
+        La brecha no está en el rol: está en si la empresa acepta trabajo remoto. Fuente: rangos publicados por
+        elempleo entre el 5 y el 23 de octubre de 2026.
+      </p>
+    </div>
+  </section>
+</Base>

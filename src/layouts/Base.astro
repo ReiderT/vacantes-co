@@ -1,0 +1,107 @@
+---
+import '../styles/global.css'
+import '@fontsource-variable/rubik'
+import '@fontsource/geist-pixel'
+import '@fontsource-variable/geist-mono'
+import ThemeToggle from '../components/ThemeToggle.astro'
+
+interface Props {
+  title: string
+  description: string
+}
+
+const { title, description } = Astro.props
+const year = new Date().getFullYear()
+---
+
+<!doctype html>
+<html lang="es" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark light" />
+    <title>{title}</title>
+
+    <!-- Theme boot: blocking, so the first paint already has the right tokens. -->
+    <script is:inline>
+      (() => {
+        const stored = localStorage.getItem('theme')
+        const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.classList.toggle('dark', dark)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
+  </head>
+
+  <body class="relative min-h-screen bg-canvas font-sans text-ink antialiased">
+    <!-- Circuit texture: static traces plus one travelling pulse. -->
+    <div class="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-60" aria-hidden="true">
+      <svg
+        class="absolute -top-24 left-1/2 h-[120vh] w-[160vw] -translate-x-1/2"
+        viewBox="0 0 1200 900"
+        fill="none"
+        preserveAspectRatio="xMidYMin slice"
+      >
+        <g stroke="var(--circuit-stroke)" stroke-opacity="var(--circuit-opacity)" class="circuit-lines">
+          <path d="M0 180h220v120h260" />
+          <path d="M1200 90h-260v180h-180" />
+          <path d="M0 620h160v-90h300" />
+          <path d="M1200 700h-200v-120h-240" />
+          <path d="M420 0v80h160v90" />
+          <path d="M760 900v-140h-160v-70" />
+        </g>
+        <g>
+          <path class="circuit-pulse" d="M0 180h220v120h260" stroke="var(--circuit-stroke)" stroke-opacity="0.5" />
+          <path class="circuit-pulse" d="M1200 700h-200v-120h-240" stroke="var(--circuit-stroke)" stroke-opacity="0.35" />
+        </g>
+      </svg>
+      <div class="absolute -top-40 left-1/2 h-[36rem] w-[36rem] -translate-x-1/2 rounded-full bg-primary/20 blur-[120px]"></div>
+    </div>
+
+    <div class="relative z-10 mx-auto w-full max-w-7xl px-6">
+      <header class="flex items-center justify-between gap-6 py-8">
+        <a href={import.meta.env.BASE_URL} class="focus-ring group flex items-center gap-3 rounded-xl">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-500 group-hover:scale-110">
+            <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+              <rect x="6" y="6" width="12" height="12" rx="2" />
+              <path d="M10 2v4M14 2v4M10 18v4M14 18v4M2 10h4M2 14h4M18 10h4M18 14h4" stroke-linecap="round" />
+            </svg>
+          </span>
+          <span class="flex flex-col leading-tight">
+            <span class="font-display text-sm text-ink">RTElectronics</span>
+            <span class="text-[10px] font-bold tracking-widest text-ink-muted uppercase">Radar de vacantes</span>
+          </span>
+        </a>
+
+        <div class="flex items-center gap-3">
+          <span class="hidden text-xs font-medium text-ink-muted sm:block">Computrabajo + elempleo · Colombia</span>
+          <ThemeToggle />
+        </div>
+      </header>
+
+      <main>
+        <slot />
+      </main>
+
+      <footer class="content-auto mt-24 border-t border-line py-12">
+        <div class="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p class="text-sm font-light text-ink-muted">
+              Snapshot generado con Apify MCP · 4 corridas · <span class="font-mono">2026-11-03</span>
+            </p>
+            <p class="mt-1 text-xs font-light text-ink-muted">
+              Los sueldos son el rango publicado por el portal, en pesos colombianos por mes. «ND» significa que la
+              oferta no lo publica.
+            </p>
+          </div>
+          <p class="text-xs font-light text-ink-muted">&copy; {year} RTElectronics · «Conectando ideas y realidades»</p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>
+
+<script>
+  import '../scripts/reveal'
+</script>
