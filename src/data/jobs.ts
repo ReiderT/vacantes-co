@@ -16,9 +16,11 @@
 /** Scrape date. The page is a snapshot: "this week" is measured against it, never against Date.now(). */
 export const REFERENCE_DATE = '2026-11-03'
 
+import { linkedinJobs } from './linkedin'
+
 export type Track = 'dev' | 'electronics'
 export type WorkMode = 'Remoto' | 'Híbrido' | 'Presencial' | 'No especifica'
-export type Source = 'Computrabajo' | 'elempleo'
+export type Source = 'Computrabajo' | 'elempleo' | 'LinkedIn'
 
 export interface Job {
   id: string
@@ -43,7 +45,7 @@ export interface Job {
 const CT = 'https://co.computrabajo.com/ofertas-de-trabajo/'
 const EL = 'https://www.elempleo.com/co/ofertas-trabajo/'
 
-export const jobs: Job[] = [
+const manualJobs: Job[] = [
   /* ── Published within 7 days of the scrape ─────────────────────────── */
   {
     id: 'itera-power-platform',
@@ -1003,6 +1005,13 @@ export const jobs: Job[] = [
   },
 ]
 
+/**
+ * LinkedIn entra desde `linkedin.ts`, generado por `scripts/build-linkedin.mjs`.
+ * Ese módulo sólo importa el tipo `Job`, así que el ciclo es de tipos y se
+ * borra en tiempo de ejecución.
+ */
+export const jobs: Job[] = [...manualJobs, ...linkedinJobs]
+
 /** Calendar-day distance from the scrape. Negative-free; null when the portal gave no date. */
 export function daysAgo(publishedAt: string | null): number | null {
   if (!publishedAt) return null
@@ -1033,7 +1042,7 @@ export const TRACKS: Record<Track, string> = {
 }
 
 export const MODES: WorkMode[] = ['Remoto', 'Híbrido', 'Presencial', 'No especifica']
-export const SOURCES: Source[] = ['Computrabajo', 'elempleo']
+export const SOURCES: Source[] = ['Computrabajo', 'elempleo', 'LinkedIn']
 
 export const stats = {
   total: jobs.length,

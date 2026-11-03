@@ -8,6 +8,7 @@
  */
 
 import type { Source } from './jobs'
+import { jobs } from './jobs'
 
 export type FlagCode =
   | 'sales-disguised'
@@ -24,6 +25,8 @@ export type FlagCode =
   | 'stale-posting'
   | 'empty-requirement'
   | 'mislabeled'
+  | 'mass-reposting'
+  | 'seniority-mismatch'
 
 export interface FlagMeta {
   label: string
@@ -115,6 +118,18 @@ export const FLAG_META: Record<FlagCode, FlagMeta> = {
     severity: 'medium',
     explain:
       'El aviso aparece bajo «desarrollador» o «programador» pero la descripción es planeación administrativa, logística o ventas.',
+  },
+  'mass-reposting': {
+    label: 'Reposteo masivo del mismo empleador',
+    severity: 'medium',
+    explain:
+      'Una sola empresa publica decenas de avisos simultáneos con el mismo patrón de referencia. El mercado se ve más grande de lo que es y los procesos compiten entre sí.',
+  },
+  'seniority-mismatch': {
+    label: 'Seniority contradictorio',
+    severity: 'medium',
+    explain:
+      'El título dice senior y la plataforma lo clasifica como junior. El filtro de seniority del portal es inservible y el candidato no puede confiar en él.',
   },
 }
 
@@ -459,6 +474,45 @@ export const redFlags: RedFlagItem[] = [
       },
     ],
   },
+
+  /* ── LinkedIn ──────────────────────────────────────────────────────── */
+  {
+    title: 'Senior Embedded C++ Developer - Remote Work | REF#308605',
+    company: 'BairesDev',
+    city: 'Colombia',
+    source: 'LinkedIn',
+    url: 'https://co.linkedin.com/jobs/view/senior-embedded-c%2B%2B-developer-remote-work-ref%23308605-at-bairesdev-4487013593',
+    salaryText: 'No publica',
+    publishedAt: '2026-11-03',
+    flags: [
+      {
+        code: 'mass-reposting',
+        evidence:
+          'BairesDev publicó 69 avisos el mismo mes para Colombia, 64 de ellos con el patrón «REF#» en el título («REF#308605», «REF#307837»…). Es la misma empresa compitiendo consigo misma.',
+      },
+      {
+        code: 'salary-hidden',
+        evidence:
+          'Sólo 2 de las 300 ofertas de LinkedIn publican monto. Ésta, senior y remota, no es una de ellas: el campo de salario viene vacío.',
+      },
+    ],
+  },
+  {
+    title: 'Senior Embedded Engineer - Remote work | REF#308750',
+    company: 'BairesDev',
+    city: 'Cali',
+    source: 'LinkedIn',
+    url: 'https://co.linkedin.com/jobs/view/senior-embedded-engineer-remote-work-ref%23308750-at-bairesdev-4487013590',
+    salaryText: 'No publica',
+    publishedAt: '2026-11-03',
+    flags: [
+      {
+        code: 'seniority-mismatch',
+        evidence:
+          'El título dice «Senior Embedded Engineer» y el campo `seniorityLevel` de LinkedIn dice «Entry level». 6 de 300 avisos tienen esta contradicción; ninguno en el sentido inverso.',
+      },
+    ],
+  },
 ]
 
 export const flagSummary = (() => {
@@ -479,5 +533,8 @@ export const flagSummary = (() => {
   }
 })()
 
-/** Cobertura del corpus: cuántas de las 56 vacantes curadas no publican monto. */
-export const salaryHiddenShare = { hidden: 24, total: 56 }
+/** Cobertura del corpus: cuántas de las vacantes curadas no publican monto. */
+export const salaryHiddenShare = {
+  hidden: jobs.filter((job) => job.salaryMax === null).length,
+  total: jobs.length,
+}
